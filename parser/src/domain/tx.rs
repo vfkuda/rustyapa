@@ -4,6 +4,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+/// Type wrapper for transaction Id field.
 #[derive(Debug, Default, Eq, PartialEq, Hash, Clone, Copy)]
 pub struct TxIdType(pub u64);
 impl Display for TxIdType {
@@ -12,6 +13,7 @@ impl Display for TxIdType {
     }
 }
 
+/// Type wrapper for account Id field.
 #[derive(Debug, Default, Eq, PartialEq, Hash, Clone, Copy)]
 pub struct AccountType(pub u64);
 impl Display for AccountType {
@@ -20,10 +22,14 @@ impl Display for AccountType {
     }
 }
 
+/// Type wrapper for transaction operation type/kind field.
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum TxKind {
+    /// Incoming funds to destination account : 0->to.
     Deposit,
+    /// Funds transfer between two accounts : from->to.
     Transfer,
+    /// Outgoing funds from source account : from->0 .
     Withdrawal,
 }
 impl Display for TxKind {
@@ -36,9 +42,11 @@ impl Display for TxKind {
     }
 }
 
+/// Type wrapper for transaction timestamp field.
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub struct TxTimestamp(pub SystemTime);
 impl TxTimestamp {
+    /// Returns current timestamp with millisecond precision.
     pub fn now() -> Self {
         let t = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -48,6 +56,7 @@ impl TxTimestamp {
         let ts = UNIX_EPOCH + Duration::from_millis(ms);
         Self(ts)
     }
+    /// Returns milliseconds since unix epoch for this timestamp.
     pub fn milliseconds(&self) -> u128 {
         let t = self
             .0
@@ -55,11 +64,13 @@ impl TxTimestamp {
             .expect("time can't be before the Unix");
         t.as_millis()
     }
+    /// Builds timestamp from UNIX epoch milliseconds.
     pub fn from_millis(milliseconds: u64) -> Option<Self> {
         UNIX_EPOCH
             .checked_add(Duration::from_millis(milliseconds))
             .map(|ts| TxTimestamp(ts))
     }
+    /// Parses milliseconds since unix epoch from string.
     pub fn parse_timestamp(value: &str) -> Result<Self, ParserError> {
         let milliseconds: u64 = value.parse()?;
         TxTimestamp::from_millis(milliseconds).ok_or(ParserError::UnparsableValue(format!(
@@ -75,10 +86,14 @@ impl Display for TxTimestamp {
     }
 }
 
+/// Transaction processing status enum.
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum TxStatus {
+    /// Transaction was processed successfully.
     Success,
+    /// Transaction porcessed with failure.
     Failure,
+    /// Transaction processing is in progress.
     Pending,
 }
 
@@ -92,17 +107,27 @@ impl Display for TxStatus {
     }
 }
 
+/// Transaction record domain model.
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct TxRecord {
+    /// Unique transaction identifier.
     pub id: TxIdType,
+    /// Transaction operation type/kind.
     pub kind: TxKind,
+    /// Source account id.
     pub from: AccountType,
+    /// Destination account id.
     pub to: AccountType,
+    /// Amount in minimal currency units.
     pub amount: i64,
+    /// Transaction processing timestamp.
     pub ts: TxTimestamp,
+    /// Processing status.
     pub status: TxStatus,
+    /// Transaction description/ operation purpose.
     pub description: String,
 }
+
 impl Default for TxRecord {
     fn default() -> Self {
         Self {

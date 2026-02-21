@@ -42,15 +42,23 @@ impl From<ParseIntError> for ParserError {
 /// Additional context attached to parser errors.
 #[derive(Debug)]
 pub enum ParserContext {
+    /// Original input line and its number.
     LineNumAndLine {
+        /// Line number.
         line_num: usize,
+        /// Lline content.
         line: String,
     },
+    /// Current byte/char position in Read stream.
     Position {
+        /// Position (index).
         position: usize,
     },
+    /// Position and field being parsed.
     PositionAndField {
+        /// Position index.
         position: usize,
+        /// Field key being parsed.
         field_key: TxFieldKey,
     },
 }

@@ -1,5 +1,6 @@
 //! Parser library for financial transaction formats.
 //! Supports conversion and comparison through shared domain types.
+#![warn(missing_docs)]
 
 /// Codecs for reading and writing supported file formats.
 pub mod codecs;

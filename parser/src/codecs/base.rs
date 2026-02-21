@@ -17,11 +17,14 @@ use super::traits::*;
 // Formats enumerations and factory helper functions
 //
 
-/// format enum providing both read and write capabilities
+/// Top-level format selector used by CLI and integration code.
 #[derive(Clone, Debug, ValueEnum)]
 pub enum Format {
+    /// Binary YPBank format.
     Binary,
+    /// Text YPBank format.
     Text,
+    /// CSV YPBank format.
     Csv,
     /// Dummy format used for no-op behavior.
     Dummy,
@@ -113,14 +116,23 @@ impl FromStr for TxStatus {
 // Transaction fields composite types and display/parse for them
 //
 #[derive(Debug)]
+/// Field names shared between text and csv formats.
 pub enum TxFieldKey {
+    /// `TX_ID` field.
     Id,
+    /// `TX_TYPE` field.
     TxKind,
+    /// `FROM_USER_ID` field.
     FromUserId,
+    /// `TO_USER_ID` field.
     ToUserId,
+    /// `AMOUNT` field.
     Amount,
+    /// `TIMESTAMP` field.
     Timestamp,
+    /// `STATUS` field.
     Status,
+    /// `DESCRIPTION` field.
     Description,
 }
 impl Display for TxFieldKey {
