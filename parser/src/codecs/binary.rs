@@ -132,12 +132,7 @@ impl DataParser for BinaryCodec {
 
             // read and parse TIMESTAMP
             let ts_miliseconds = self.read_u64_be(&mut buf)?;
-            let ts = TxTimestamp::from_millis(ts_miliseconds)
-                .ok_or(ParserError::UnparsableValue(ts_miliseconds.to_string()))
-                .add_parser_ctx(ParserContext::with_position_and_field_key(
-                    pos,
-                    TxFieldKey::Timestamp,
-                ))?;
+            let ts = TxTimestamp::from_millis(ts_miliseconds);
             pos += 8;
 
             // read and parse STATUS
@@ -196,7 +191,7 @@ impl DataWriter for BinaryCodec {
             self.write_u64_be(w, rec.from.0)?;
             self.write_u64_be(w, rec.to.0)?;
             self.write_i64_be(w, rec.amount)?;
-            self.write_u64_be(w, rec.ts.milliseconds() as u64)?;
+            self.write_u64_be(w, rec.ts.millis())?;
             w.write_all(&[self.status_to_u8(rec.status)])
                 .add_write_ctx()?;
             self.write_u32_be(w, desc_bytes.len() as u32)?;

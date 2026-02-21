@@ -10,7 +10,7 @@ fn sample_tx() -> TxRecord {
         from: AccountType(11),
         to: AccountType(22),
         amount: -500,
-        ts: TxTimestamp::from_millis(1_700_000).expect("valid timestamp"),
+        ts: TxTimestamp::from_millis(1_700_000),
         status: TxStatus::Pending,
         description: "payment".to_string(),
     }
