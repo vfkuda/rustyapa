@@ -1,4 +1,3 @@
-use clap::ValueEnum;
 use std::fmt::Display;
 use std::io::{Read, Write};
 use std::str::FromStr;
@@ -13,51 +12,36 @@ use super::errors::ParserError;
 use super::text::TextCodec;
 use super::traits::*;
 
-//
-// Formats enumerations and factory helper functions
-//
-
-/// Top-level format selector used by CLI and integration code.
-#[derive(Clone, Debug, ValueEnum)]
-pub enum Format {
-    /// Binary YPBank format.
-    Binary,
-    /// Text YPBank format.
-    Text,
-    /// CSV YPBank format.
-    Csv,
+/// Supported Codecs factory.
+#[derive(Clone, Debug)]
+pub enum Codec {
+    /// Codec for Binary format.
+    BinaryCodec,
+    /// Codec for Text format.
+    TextCodec,
+    /// Codec for CSV format.
+    CsvCodec,
     /// Dummy format used for no-op behavior.
-    Dummy,
+    DummyCodec,
 }
 
-impl Format {
+impl Codec {
     /// Parses records from input stream using selected codec.
     pub fn parse<R: Read>(&self, r: R) -> Result<Vec<TxRecord>, AppError> {
         match self {
-            Format::Binary => BinaryCodec::default().parse(r),
-            Format::Text => TextCodec::default().parse(r),
-            Format::Csv => CsvCodec::default().parse(r),
-            Format::Dummy => DummyCodec::default().parse(r),
+            Codec::BinaryCodec => BinaryCodec::default().parse(r),
+            Codec::TextCodec => TextCodec::default().parse(r),
+            Codec::CsvCodec => CsvCodec::default().parse(r),
+            Codec::DummyCodec => DummyCodec::default().parse(r),
         }
     }
     /// Writes records to output stream using selected codec.
     pub fn write<W: Write>(&self, w: &mut W, data: &[TxRecord]) -> Result<(), AppError> {
         match self {
-            Format::Binary => BinaryCodec::default().write(w, data),
-            Format::Text => TextCodec::default().write(w, data),
-            Format::Csv => CsvCodec::default().write(w, data),
-            Format::Dummy => DummyCodec::default().write(w, data),
-        }
-    }
-}
-
-impl Display for Format {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Format::Binary => write!(f, "binary"),
-            Format::Text => write!(f, "text"),
-            Format::Csv => write!(f, "csv"),
-            Format::Dummy => write!(f, "nope"),
+            Codec::BinaryCodec => BinaryCodec::default().write(w, data),
+            Codec::TextCodec => TextCodec::default().write(w, data),
+            Codec::CsvCodec => CsvCodec::default().write(w, data),
+            Codec::DummyCodec => DummyCodec::default().write(w, data),
         }
     }
 }

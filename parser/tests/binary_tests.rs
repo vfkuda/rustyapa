@@ -1,4 +1,4 @@
-use parser::codecs::base::Format;
+use parser::codecs::base::Codec;
 use parser::codecs::errors::ParserError;
 use parser::domain::tx::{AccountType, TxIdType, TxKind, TxRecord, TxStatus, TxTimestamp};
 use parser::errors::AppError;
@@ -55,7 +55,7 @@ fn encode_record(
 
 #[test]
 fn parse_empty_binary_is_ok_and_returns_no_records() {
-    let parsed = Format::Binary
+    let parsed = Codec::BinaryCodec
         .parse([].as_slice())
         .expect("empty binary stream should parse");
     assert!(parsed.is_empty());
@@ -70,11 +70,11 @@ fn binary_round_trip_multiple_records() {
     tx2.description = "refund".to_string();
 
     let mut bytes = Vec::new();
-    Format::Binary
+    Codec::BinaryCodec
         .write(&mut bytes, &[tx1.clone(), tx2.clone()])
         .expect("binary write should succeed");
 
-    let parsed = Format::Binary
+    let parsed = Codec::BinaryCodec
         .parse(bytes.as_slice())
         .expect("binary parse should succeed");
     assert_eq!(parsed, vec![tx1, tx2]);
@@ -83,7 +83,7 @@ fn binary_round_trip_multiple_records() {
 #[test]
 fn parse_rejects_invalid_magic_header() {
     let input = encode_record(0, 0, b"ok", None, *b"NOPE");
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("invalid magic should fail");
     assert!(matches!(
@@ -98,7 +98,7 @@ fn parse_rejects_invalid_magic_header() {
 #[test]
 fn parse_rejects_too_small_record_size() {
     let input = encode_record(0, 0, b"", Some(45), *b"YPBN");
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("too small record size should fail");
     assert!(matches!(
@@ -113,7 +113,7 @@ fn parse_rejects_too_small_record_size() {
 #[test]
 fn parse_rejects_unknown_kind_value() {
     let input = encode_record(9, 0, b"ok", None, *b"YPBN");
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("unknown tx kind should fail");
     assert!(matches!(
@@ -128,7 +128,7 @@ fn parse_rejects_unknown_kind_value() {
 #[test]
 fn parse_rejects_unknown_status_value() {
     let input = encode_record(0, 9, b"ok", None, *b"YPBN");
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("unknown tx status should fail");
     assert!(matches!(
@@ -143,7 +143,7 @@ fn parse_rejects_unknown_status_value() {
 #[test]
 fn parse_rejects_non_utf8_description() {
     let input = encode_record(0, 0, &[0xFF, 0xFF], None, *b"YPBN");
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("invalid UTF-8 description should fail");
     assert!(matches!(
@@ -159,7 +159,7 @@ fn parse_rejects_non_utf8_description() {
 fn parse_returns_read_error_for_truncated_body() {
     let mut input = encode_record(0, 0, b"ok", None, *b"YPBN");
     input.truncate(input.len() - 2);
-    let err = Format::Binary
+    let err = Codec::BinaryCodec
         .parse(input.as_slice())
         .expect_err("truncated body should fail");
     assert!(matches!(err, AppError::ReadError(_)));

@@ -1,5 +1,5 @@
 use clap::Parser;
-use parser::codecs::base::Format;
+use rustyapa::cli_format::Format;
 use std::fs::File;
 
 #[derive(Parser, Debug)]
@@ -22,10 +22,10 @@ fn run(args: CliArgs) -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let stdout = &mut std::io::stdout().lock();
-    let data = args.input_format.parse(f)?;
+    let data = args.input_format.codec().parse(f)?;
     println!("{} records successfully ingested\n", data.len());
 
-    args.output_format.write(stdout, &data)?;
+    args.output_format.codec().write(stdout, &data)?;
     Ok(())
 }
 

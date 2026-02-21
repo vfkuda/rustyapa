@@ -1,5 +1,6 @@
 use clap::Parser;
-use parser::{codecs::base::Format, domain::tx::TxRecord};
+use parser::domain::tx::TxRecord;
+use rustyapa::cli_format::Format;
 use std::{collections::HashMap, fs::File};
 
 #[derive(Parser, Debug)]
@@ -21,7 +22,7 @@ fn read_records_from_file(
     let f = File::open(filename).map_err(|e| {
         std::io::Error::new(e.kind(), format!("Error opening a file {} {}", filename, e))
     })?;
-    Ok(file_format.parse(f)?)
+    Ok(file_format.codec().parse(f)?)
 }
 
 fn run(args: CliArgs) -> Result<(), Box<dyn std::error::Error>> {

@@ -1,4 +1,4 @@
-use parser::codecs::base::Format;
+use parser::codecs::base::Codec;
 use parser::codecs::base::TxFieldKey;
 use parser::codecs::errors::ParserError;
 use parser::errors::AppError;
@@ -36,7 +36,7 @@ STATUS: FAILURE
 DESCRIPTION: "Fee"
 "#;
 
-    let records = Format::Text
+    let records = Codec::TextCodec
         .parse(input.as_bytes())
         .expect("text parse should succeed");
     assert_eq!(records.len(), 2);
@@ -56,7 +56,7 @@ TX_TYPE: WITHDRAWAL
 TX_ID: 7
 "#;
 
-    let records = Format::Text
+    let records = Codec::TextCodec
         .parse(input.as_bytes())
         .expect("record with shuffled fields should parse");
     assert_eq!(records.len(), 1);
@@ -77,7 +77,7 @@ STATUS: SUCCESS
 DESCRIPTION: "Salary"
 "#;
 
-    let err = Format::Text
+    let err = Codec::TextCodec
         .parse(input.as_bytes())
         .expect_err("duplicate key should fail");
     assert!(matches!(
@@ -101,7 +101,7 @@ STATUS: SUCCESS
 
 "#;
 
-    let err = Format::Text
+    let err = Codec::TextCodec
         .parse(input.as_bytes())
         .expect_err("missing description should fail");
     assert!(matches!(
@@ -116,7 +116,7 @@ STATUS: SUCCESS
 #[test]
 fn parse_rejects_line_without_delimiter() {
     let input = "TX_ID 1\n";
-    let err = Format::Text
+    let err = Codec::TextCodec
         .parse(input.as_bytes())
         .expect_err("missing delimiter should fail");
     assert!(matches!(
@@ -139,7 +139,7 @@ TIMESTAMP: 1700
 STATUS: SUCCESS
 DESCRIPTION: Salary
 "#;
-    let err = Format::Text
+    let err = Codec::TextCodec
         .parse(input.as_bytes())
         .expect_err("unquoted description should fail");
     assert!(matches!(
@@ -153,7 +153,7 @@ DESCRIPTION: Salary
 
 #[test]
 fn parse_empty_text_input_returns_no_records() {
-    let records = Format::Text
+    let records = Codec::TextCodec
         .parse([].as_slice())
         .expect("empty text should parse");
     assert!(records.is_empty());
@@ -161,15 +161,15 @@ fn parse_empty_text_input_returns_no_records() {
 
 #[test]
 fn text_write_then_parse_single_record() {
-    let records = Format::Text
+    let records = Codec::TextCodec
         .parse(RECORD_1.as_bytes())
         .expect("fixture should parse");
 
     let mut bytes = Vec::new();
-    Format::Text
+    Codec::TextCodec
         .write(&mut bytes, &records)
         .expect("text write should succeed");
-    let reparsed = Format::Text
+    let reparsed = Codec::TextCodec
         .parse(bytes.as_slice())
         .expect("written text should parse");
     assert_eq!(reparsed, records);
