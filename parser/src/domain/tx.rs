@@ -56,9 +56,11 @@ impl TxTimestamp {
             .unwrap_or(0);
         Self(now_or_zero)
     }
+    /// Returns timestamp as milliseconds since Unix epoc
     pub fn millis(&self) -> u64 {
         self.0
     }
+    /// Create new TxTimestamp instance based on milliseconds since Unix epoch provided
     pub fn from_millis(milliseconds: u64) -> Self {
         Self(milliseconds)
     }
