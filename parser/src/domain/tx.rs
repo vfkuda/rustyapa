@@ -1,7 +1,7 @@
 use crate::codecs::errors::ParserError;
 use std::{
     fmt::Display,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 /// Type wrapper for transaction Id field.
@@ -44,45 +44,34 @@ impl Display for TxKind {
 
 /// Type wrapper for transaction timestamp field.
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub struct TxTimestamp(pub SystemTime);
+pub struct TxTimestamp(pub u64);
 impl TxTimestamp {
-    /// Returns current timestamp with millisecond precision.
-    pub fn now() -> Self {
-        let t = SystemTime::now()
+    /// Returns milliseconds for now or 0 if now before Unix epoc
+    pub fn default() -> Self {
+        let now_or_zero = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("time can't be before the Unix epoch with ::now");
-        // here we truncate nanoseconds
-        let ms = t.as_millis() as u64;
-        let ts = UNIX_EPOCH + Duration::from_millis(ms);
-        Self(ts)
+            .ok()
+            .map(|d| d.as_millis())
+            .map(|ms| ms as u64)
+            .unwrap_or(0);
+        Self(now_or_zero)
     }
-    /// Returns milliseconds since unix epoch for this timestamp.
-    pub fn milliseconds(&self) -> u128 {
-        let t = self
-            .0
-            .duration_since(UNIX_EPOCH)
-            .expect("time can't be before the Unix");
-        t.as_millis()
+    pub fn millis(&self) -> u64 {
+        self.0
     }
-    /// Builds timestamp from UNIX epoch milliseconds.
-    pub fn from_millis(milliseconds: u64) -> Option<Self> {
-        UNIX_EPOCH
-            .checked_add(Duration::from_millis(milliseconds))
-            .map(|ts| TxTimestamp(ts))
+    pub fn from_millis(milliseconds: u64) -> Self {
+        Self(milliseconds)
     }
     /// Parses milliseconds since unix epoch from string.
     pub fn parse_timestamp(value: &str) -> Result<Self, ParserError> {
         let milliseconds: u64 = value.parse()?;
-        TxTimestamp::from_millis(milliseconds).ok_or(ParserError::UnparsableValue(format!(
-            "timestamp overflow: {}",
-            value
-        )))
+        Ok(TxTimestamp::from_millis(milliseconds))
     }
 }
 
 impl Display for TxTimestamp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.milliseconds())
+        write!(f, "{}", self.millis())
     }
 }
 
@@ -136,7 +125,7 @@ impl Default for TxRecord {
             from: Default::default(),
             to: Default::default(),
             amount: Default::default(),
-            ts: TxTimestamp::now(),
+            ts: TxTimestamp::default(),
             status: TxStatus::Failure,
             description: Default::default(),
         }
@@ -155,7 +144,20 @@ mod tests_tx {
 
     #[test]
     fn ts_is_equal() {
-        let ts = TxTimestamp::now();
+        let ts = TxTimestamp(42424242);
         assert_eq!(ts, ts.clone());
+    }
+
+    #[test]
+    fn ts_parse() {
+        let err = TxTimestamp::parse_timestamp("asdf").expect_err("unparseable uint");
+        assert!(matches!(err, ParserError::UnparsableValue { .. }));
+
+        let err = TxTimestamp::parse_timestamp("-1").expect_err("milis before epoch");
+        assert!(matches!(err, ParserError::UnparsableValue { .. }));
+
+        let ts = TxTimestamp::parse_timestamp("42424242");
+        assert!(ts.is_ok());
+        assert_eq!(42424242, ts.unwrap().millis());
     }
 }
